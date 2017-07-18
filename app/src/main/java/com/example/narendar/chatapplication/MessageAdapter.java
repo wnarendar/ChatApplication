@@ -1,12 +1,14 @@
 package com.example.narendar.chatapplication;
 
 import android.content.Context;
+import android.databinding.DataBindingUtil;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.example.narendar.chatapplication.databinding.MessageItemBinding;
 import com.example.narendar.chatapplication.model.Message;
 
 import java.util.ArrayList;
@@ -19,6 +21,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MyViewHo
 
     private Context mContext;
     private ArrayList<Message> mMessageArr;
+    private MessageItemBinding itemBinding;
 
     public MessageAdapter(Context context, ArrayList<Message> messageArr) {
         this.mContext = context;
@@ -27,21 +30,21 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MyViewHo
 
     @Override
     public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(mContext).inflate(R.layout.message_item, null);
-        return new MyViewHolder(view);
+        itemBinding = DataBindingUtil.inflate(LayoutInflater.from(mContext), R.layout.message_item, parent, false);
+        return new MyViewHolder(itemBinding.getRoot());
     }
 
     @Override
     public void onBindViewHolder(MyViewHolder holder, int position) {
         Message message = mMessageArr.get(position);
         if (MainActivity.SENDER.equalsIgnoreCase(message.getIsSender())) {
-            holder.tv_sender.setText(message.getMessage());
-            holder.tv_sender.setVisibility(View.VISIBLE);
-            holder.tv_receiver.setVisibility(View.GONE);
+            itemBinding.tvSender.setText(message.getMessage());
+            itemBinding.tvSender.setVisibility(View.VISIBLE);
+            itemBinding.tvReceiver.setVisibility(View.GONE);
         } else {
-            holder.tv_receiver.setText(message.getMessage());
-            holder.tv_receiver.setVisibility(View.VISIBLE);
-            holder.tv_sender.setVisibility(View.GONE);
+            itemBinding.tvReceiver.setText(message.getMessage());
+            itemBinding.tvReceiver.setVisibility(View.VISIBLE);
+            itemBinding.tvSender.setVisibility(View.GONE);
         }
     }
 
@@ -52,12 +55,8 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MyViewHo
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
 
-        private TextView tv_receiver, tv_sender;
-
         public MyViewHolder(View itemView) {
             super(itemView);
-            tv_receiver = (TextView) itemView.findViewById(R.id.tv_receiver);
-            tv_sender = (TextView) itemView.findViewById(R.id.tv_sender);
         }
     }
 }
