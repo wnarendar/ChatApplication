@@ -8,13 +8,13 @@ public class MESSAGE_TBL {
 
     private static final String TAG = MESSAGE_TBL.class.getSimpleName();
     public static final String TABLE_NAME = "MESSAGE_TABLE";
-    public static final String SENDER_MSG = "SENDER_MSG";
-    public static final String RECEIVER_MSG = "RECEIVER_MSG";
+    public static final String MESSAGE = "MESSAGE";
+    public static final String IS_SENDER = "IS_SENDER";
 
     private static final String MESSAGE_TBL_CREATE =
             "create table " + TABLE_NAME +
-                    "(" + SENDER_MSG + " text," +
-                    RECEIVER_MSG + " text );";
+                    "(" + MESSAGE + " text," +
+                    IS_SENDER + " text );";
 
     private static final String MESSAGE_TBL_DROP = "DROP TABLE IF EXISTS " + TABLE_NAME;
 

@@ -5,6 +5,7 @@ import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
@@ -15,68 +16,78 @@ import android.widget.Toast;
 
 import com.example.narendar.chatapplication.databinding.ActivityMainBinding;
 import com.example.narendar.chatapplication.db.queries.InsertQueries;
+import com.example.narendar.chatapplication.db.queries.SelectQueries;
 import com.example.narendar.chatapplication.model.Message;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
+
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding mBinding;
-    private List<Message> messageList = new ArrayList<Message>();
+    private ArrayList<Message> messageList = new ArrayList<Message>();
+    private ArrayList<Message> tempList = new ArrayList<Message>();
+    private MessageAdapter messageAdapter;
+    public static final String SENDER = "sender";
+    public static final String RECEIVER = "receiver";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
-        mBinding.ivSend.setOnClickListener(new View.OnClickListener() {
+
+        messageAdapter = new MessageAdapter(MainActivity.this, messageList);
+        mBinding.recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+        mBinding.recyclerView.setAdapter(messageAdapter);
+
+        getMessagesFromDB();
+
+        mBinding.btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 sendMessage();
             }
         });
 
-
     }
 
     private void sendMessage() {
         StringBuilder sbMsg = new StringBuilder(mBinding.edtEnter.getText().toString());
         if (!TextUtils.isEmpty(sbMsg.toString())) {
-            setLabel(sbMsg.toString(), "sender");
-            setLabel(sbMsg.reverse().toString(), "receiver");
             mBinding.edtEnter.setText("");
-            Message message = new Message();
-            message.setSenderMessage(sbMsg.toString());
-            message.setReceiverMessage(sbMsg.reverse().toString());
-            messageList.add(message);
-            mBinding.scrollbar.scrollTo(0, mBinding.llMessageBar.getHeight());
+
+            Message senderMsg = new Message();
+            senderMsg.setMessage(sbMsg.toString());
+            senderMsg.setIsSender(SENDER);
+            messageList.add(senderMsg);
+            tempList.add(senderMsg);
+
+            Message receiverMsg = new Message();
+            receiverMsg.setMessage(sbMsg.reverse().toString());
+            receiverMsg.setIsSender(RECEIVER);
+            messageList.add(receiverMsg);
+            tempList.add(receiverMsg);
+
+            messageAdapter.notifyDataSetChanged();
+            mBinding.recyclerView.smoothScrollToPosition(messageAdapter.getItemCount() - 1);
 
         } else {
             Toast.makeText(MainActivity.this, "Enter some text to send!", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void setLabel(String strMsg, String strAlignment) {
-        TextView textView = new TextView(MainActivity.this);
-        textView.setText(strMsg);
-        textView.setTextSize(20);
-        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        if ("sender".equalsIgnoreCase(strAlignment))
-            layoutParams.gravity = Gravity.RIGHT;
-
-        textView.setLayoutParams(layoutParams);
-        mBinding.llMessageBar.addView(textView);
-    }
-
     @Override
     public void onBackPressed() {
-//        super.onBackPressed();
         showConfirmDialog();
-        try {
-            InsertQueries.insertMessages(MainActivity.this, messageList);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        storeMessagesInDB();
     }
 
     private void showConfirmDialog() {
@@ -95,5 +106,33 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
         alertDialog.show();
+    }
+
+    private void storeMessagesInDB() {
+        InsertQueries.insertMessages(MainActivity.this, tempList)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<Integer>() {
+                    @Override
+                    public void accept(@NonNull Integer integer) throws Exception {
+
+                    }
+                });
+    }
+
+    private void getMessagesFromDB() {
+        SelectQueries.getMessages(MainActivity.this)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<ArrayList<Message>>() {
+                    @Override
+                    public void accept(@NonNull ArrayList<Message> messages) throws Exception {
+                        if (messages.size() > 0) {
+                            messageList.addAll(messages);
+                            messageAdapter.notifyDataSetChanged();
+                            mBinding.recyclerView.smoothScrollToPosition(messageAdapter.getItemCount() - 1);
+                        }
+                    }
+                });
     }
 }

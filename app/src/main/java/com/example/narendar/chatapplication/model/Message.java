@@ -6,22 +6,22 @@ package com.example.narendar.chatapplication.model;
 
 public class Message {
 
-    private String senderMessage = "";
-    private String receiverMessage = "";
+    private String message = "";
+    private String isSender = "";
 
-    public String getSenderMessage() {
-        return senderMessage;
+    public String getMessage() {
+        return message;
     }
 
-    public void setSenderMessage(String senderMessage) {
-        this.senderMessage = senderMessage;
+    public void setMessage(String message) {
+        this.message = message;
     }
 
-    public String getReceiverMessage() {
-        return receiverMessage;
+    public String getIsSender() {
+        return isSender;
     }
 
-    public void setReceiverMessage(String receiverMessage) {
-        this.receiverMessage = receiverMessage;
+    public void setIsSender(String isSender) {
+        this.isSender = isSender;
     }
 }
